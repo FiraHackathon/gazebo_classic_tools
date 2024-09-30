@@ -1,0 +1,19 @@
+<package format="3">
+  <name>collision_gazebo_plugin</name>
+  <version>0.0.1</version>
+  <description>Collision detector plugin for Gazebo integrated with ROS 2</description>
+
+  <maintainer email="clement.courcelle@inrae.fr">Clément Courcelle</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>gazebo_ros</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
