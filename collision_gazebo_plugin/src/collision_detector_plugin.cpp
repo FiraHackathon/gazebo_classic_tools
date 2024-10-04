@@ -1,4 +1,3 @@
-
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Timer.hh>
 #include <gazebo/physics/World.hh>
@@ -41,53 +40,62 @@ namespace gazebo
       this->collisionPub = this->rosNode->create_publisher<std_msgs::msg::String>("collisions", 10);
 
       this->contactSub = this->gzNode->Subscribe("/gazebo/default/physics/contacts", &CollisionDetectorPlugin::OnContactMsg, this);
+
+      this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&CollisionDetectorPlugin::onUpdate, this));
     }
 
-    void OnContactMsg(ConstContactsPtr& msg) {
+    void onUpdate()
+    {
+        if (this->world->ModelByName(this->robotName) && this->world->EntityByName(this->groundCollisionName))
+        {
+          setRobotCollisionIds();
+          this->groundId = this->world->EntityByName(this->groundCollisionName)->GetId();
+          this->model_is_loaded = true;
+          
+          // Destroy connection to avoid unnecessary checks each gazebo frame
+          this->updateConnection.reset();
+        }
+    }
+
+    void OnContactMsg(ConstContactsPtr& msg) 
+    {
       if (this->model_is_loaded)
       {
         for (int i = 0; i < msg->contact_size(); ++i)
-          {
-            const gazebo::msgs::Contact &contact = msg->contact(i);
-            std::string collision_name_1 = contact.collision1();
-            std::string collision_name_2 = contact.collision2();
+        {
+          const gazebo::msgs::Contact &contact = msg->contact(i);
+          unsigned int collision1_id = contact.wrench()[0].body_1_id();
+          unsigned int collision2_id = contact.wrench()[0].body_2_id();
 
-          if (filterContacts(contact.collision1(), contact.collision2())) 
+          if (filterContacts(collision1_id, collision2_id)) 
           {
             std_msgs::msg::String msg;
-            msg.data = "Collision detected between " + collision_name_1 + " and " + collision_name_2;
+            msg.data = "Collision detected between " + std::to_string(collision1_id) + " and " + std::to_string(collision2_id);
 
             this->collisionPub->publish(msg);
           }
         }
       }
-      else 
-      {
-        if (this->world->ModelByName(this->robotName))
-        {
-          setCollisionNames();
-          this->model_is_loaded = true;
-        }
-      }
     }
 
-    void setCollisionNames()
+    void setRobotCollisionIds()
     {
       physics::ModelPtr model = this->world->ModelByName(this->robotName);
       for (auto link : model->GetLinks())
       {
         for (auto collision : link->GetCollisions()) {
-          this->collisionNames.push_back(collision->GetScopedName());
+          this->collisionIds.push_back(collision->GetId());
         } 
       }
     }
 
-    bool filterContacts(const std::string collision1, const std::string collision2)
+    bool filterContacts(const unsigned int collision1, const unsigned int collision2)
     {
       // Exactly one body is a robot link and the collision is not with the ground
-      return  (((std::find(this->collisionNames.begin() , this->collisionNames.end() , collision1) != this->collisionNames.end())
-                != (std::find(this->collisionNames.begin() , this->collisionNames.end() , collision2) != this->collisionNames.end()))
-                && collision1 != this->groundCollisionName && collision2 != this->groundCollisionName);
+      return  (((std::find(this->collisionIds.begin() , this->collisionIds.end() , collision1) != this->collisionIds.end())
+                != (std::find(this->collisionIds.begin() , this->collisionIds.end() , collision2) != this->collisionIds.end()))
+                && collision1 != this->groundId && collision2 != this->groundId);
     }
 
     void getSDFParameters(sdf::ElementPtr _sdf)
@@ -117,9 +125,11 @@ namespace gazebo
     physics::WorldPtr world;
     transport::NodePtr gzNode;
     transport::SubscriberPtr contactSub;
+    event::ConnectionPtr updateConnection;
     
-    std::vector<std::string> collisionNames;
+    std::vector<unsigned int> collisionIds;
     std::string groundCollisionName;
+    unsigned int groundId;
     std::string robotName;
     bool model_is_loaded;
 
