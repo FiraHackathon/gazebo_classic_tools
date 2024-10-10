@@ -16,7 +16,8 @@
 #include <rclcpp/timer.hpp>
 #include <rclcpp/duration.hpp>
 
-#include <std_msgs/msg/string.hpp>
+// #include <std_msgs/msg/string.hpp>
+#include <gazebo_msgs/msg/contact_state.hpp>
 
 namespace gazebo
 {
@@ -37,7 +38,7 @@ namespace gazebo
       this->model_is_loaded = false;
 
       this->world = _parent;
-      this->collisionPub = this->rosNode->create_publisher<std_msgs::msg::String>("collisions", 10);
+      this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactState>("collisions", 10);
 
       this->contactSub = this->gzNode->Subscribe("/gazebo/default/physics/contacts", &CollisionDetectorPlugin::OnContactMsg, this);
 
@@ -70,8 +71,19 @@ namespace gazebo
 
           if (filterContacts(collision1_id, collision2_id)) 
           {
-            std_msgs::msg::String msg;
-            msg.data = "Collision detected between " + std::to_string(collision1_id) + " and " + std::to_string(collision2_id);
+            gazebo_msgs::msg::ContactState msg;
+            msg.info = "Collision detected between " + std::to_string(collision1_id) + " and " + std::to_string(collision2_id);
+            msg.collision1_name = contact.collision1();
+            msg.collision2_name = contact.collision2();
+
+            for (auto contact_position : contact.position())
+            {
+              geometry_msgs::msg::Vector3 pos;
+              pos.x = contact_position.x();
+              pos.y = contact_position.y();
+              pos.z = contact_position.z();
+              msg.contact_positions.push_back(pos);
+            }
 
             this->collisionPub->publish(msg);
           }
@@ -135,7 +147,7 @@ namespace gazebo
 
 
     gazebo_ros::Node::SharedPtr rosNode;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr collisionPub;
+    rclcpp::Publisher<gazebo_msgs::msg::ContactState>::SharedPtr collisionPub;
     rclcpp::TimerBase::SharedPtr timer;
   };
 

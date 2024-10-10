@@ -21,9 +21,10 @@ endif()
 
 
 find_package(ament_cmake REQUIRED)
+find_package(gazebo_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
 
 include_directories(include ${GAZEBO_INCLUDE_DIRS})
 
@@ -31,8 +32,9 @@ add_library(${PLUGIN_LIB_NAME} SHARED src/collision_detector_plugin.cpp)
 
 ament_target_dependencies(${PLUGIN_LIB_NAME}
   rclcpp
+  gazebo_msgs
+  geometry_msgs
   gazebo_ros
-  std_msgs
 )
 
 target_link_libraries(${PLUGIN_LIB_NAME} ${GAZEBO_LIBRARIES})
