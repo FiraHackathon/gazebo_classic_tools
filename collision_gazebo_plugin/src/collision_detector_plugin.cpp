@@ -1,3 +1,4 @@
+#include <sstream>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Timer.hh>
 #include <gazebo/physics/World.hh>
@@ -16,7 +17,6 @@
 #include <rclcpp/timer.hpp>
 #include <rclcpp/duration.hpp>
 
-// #include <std_msgs/msg/string.hpp>
 #include <gazebo_msgs/msg/contact_state.hpp>
 
 namespace gazebo
@@ -35,98 +35,84 @@ namespace gazebo
       this->gzNode->Init();
 
       this->getSDFParameters(_sdf);
-      this->model_is_loaded = false;
 
       this->world = _parent;
       this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactState>("collisions", 10);
 
       this->contactSub = this->gzNode->Subscribe("/gazebo/default/physics/contacts", &CollisionDetectorPlugin::OnContactMsg, this);
 
-      this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&CollisionDetectorPlugin::onUpdate, this));
     }
 
-    void onUpdate()
-    {
-        if (this->world->ModelByName(this->robotName) && this->world->EntityByName(this->groundCollisionName))
-        {
-          setRobotCollisionIds();
-          this->groundId = this->world->EntityByName(this->groundCollisionName)->GetId();
-          this->model_is_loaded = true;
-          
-          // Destroy connection to avoid unnecessary checks each gazebo frame
-          this->updateConnection.reset();
-        }
-    }
 
     void OnContactMsg(ConstContactsPtr& msg) 
     {
-      if (this->model_is_loaded)
+      for (int i = 0; i < msg->contact_size(); ++i)
       {
-        for (int i = 0; i < msg->contact_size(); ++i)
+        const gazebo::msgs::Contact &contact = msg->contact(i);
+        std::string collision1_name = contact.collision1();
+        std::string collision2_name = contact.collision2();
+
+        if (filterContacts(collision1_name, collision2_name)) 
         {
-          const gazebo::msgs::Contact &contact = msg->contact(i);
-          unsigned int collision1_id = contact.wrench()[0].body_1_id();
-          unsigned int collision2_id = contact.wrench()[0].body_2_id();
+          gazebo_msgs::msg::ContactState msg;
+          msg.info = "Collision between " + collision1_name + " and " + collision2_name;
+          msg.collision1_name = contact.collision1();
+          msg.collision2_name = contact.collision2();
 
-          if (filterContacts(collision1_id, collision2_id)) 
+          for (auto contact_position : contact.position())
           {
-            gazebo_msgs::msg::ContactState msg;
-            msg.info = "Collision detected between " + std::to_string(collision1_id) + " and " + std::to_string(collision2_id);
-            msg.collision1_name = contact.collision1();
-            msg.collision2_name = contact.collision2();
-
-            for (auto contact_position : contact.position())
-            {
-              geometry_msgs::msg::Vector3 pos;
-              pos.x = contact_position.x();
-              pos.y = contact_position.y();
-              pos.z = contact_position.z();
-              msg.contact_positions.push_back(pos);
-            }
-
-            this->collisionPub->publish(msg);
+            geometry_msgs::msg::Vector3 pos;
+            pos.x = contact_position.x();
+            pos.y = contact_position.y();
+            pos.z = contact_position.z();
+            msg.contact_positions.push_back(pos);
           }
+
+          this->collisionPub->publish(msg);
         }
       }
     }
 
-    void setRobotCollisionIds()
-    {
-      physics::ModelPtr model = this->world->ModelByName(this->robotName);
-      for (auto link : model->GetLinks())
-      {
-        for (auto collision : link->GetCollisions()) {
-          this->collisionIds.push_back(collision->GetId());
-        } 
-      }
+    bool filterContacts(const std::string collision1_name, const std::string collision2_name)
+    {  
+      std::vector<std::string> model_link_coll1;
+      std::vector<std::string> model_link_coll2;
+
+      split(collision1_name,':',model_link_coll1);
+      split(collision2_name,':',model_link_coll2);
+
+      // At least one body is in the monitored models or links, and none is in the ignored models or links
+      return ( (is_in(model_link_coll1[0], this->monitoredModels) || is_in(model_link_coll1[1], this->monitoredLinks)
+                 || is_in(model_link_coll2[0], this->monitoredModels) || is_in(model_link_coll2[1], this->monitoredLinks)) 
+             && (!is_in(model_link_coll1[0], this->ignoredModels) && !is_in(model_link_coll1[1], this->ignoredLinks)
+                && !is_in(model_link_coll2[0], this->ignoredModels) && !is_in(model_link_coll2[1], this->ignoredLinks)));
     }
 
-    bool filterContacts(const unsigned int collision1, const unsigned int collision2)
-    {
-      // Exactly one body is a robot link and the collision is not with the ground
-      return  (((std::find(this->collisionIds.begin() , this->collisionIds.end() , collision1) != this->collisionIds.end())
-                != (std::find(this->collisionIds.begin() , this->collisionIds.end() , collision2) != this->collisionIds.end()))
-                && collision1 != this->groundId && collision2 != this->groundId);
-    }
-
+    // Parameters can be model and/or link names, separated by whitespaces if needed
     void getSDFParameters(sdf::ElementPtr _sdf)
     {
-      if (_sdf->HasElement("robot_model_name"))
-        this->robotName = _sdf->Get<std::string>("robot_model_name");
-      else
-      {
-        this->robotName = "robot";
-        gzwarn << "Using default value 'robot' for parameter 'robot_model_name' \n";
-      }
-      if (_sdf->HasElement("ground_collision_name"))
-        this->groundCollisionName = _sdf->Get<std::string>("ground_collision_name");
-      else
-      {
-        this->groundCollisionName = "ground_plane::link";
-        gzwarn << "Using default value 'ground_plane::link' for parameter 'ground_collision_name' \n";
-      }
+      if (_sdf->HasElement("monitored_models"))
+        split(_sdf->Get<std::string>("monitored_models"), ' ', this->monitoredModels);
+      if (_sdf->HasElement("monitored_links"))
+        split(_sdf->Get<std::string>("monitored_links"), ' ', this->monitoredLinks);
+      if (_sdf->HasElement("ignored_models"))
+        split(_sdf->Get<std::string>("ignored_models"), ' ', this->ignoredModels);
+      if (_sdf->HasElement("ignored_links"))
+        split(_sdf->Get<std::string>("ignored_links"), ' ', this->ignoredLinks);
     }
+
+  void split(const std::string &s, const char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (getline(ss, item, delim)) {
+        if (item != "") elems.push_back(item);
+    }
+  }
+
+  // Could be templated but only for std::vector<std::string> for now
+  bool is_in(const std::string& item, const std::vector<std::string>& container) {
+    return (std::find(container.begin(), container.end(), item) != container.end());
+  }
 
     virtual ~CollisionDetectorPlugin()
     {
@@ -139,11 +125,10 @@ namespace gazebo
     transport::SubscriberPtr contactSub;
     event::ConnectionPtr updateConnection;
     
-    std::vector<unsigned int> collisionIds;
-    std::string groundCollisionName;
-    unsigned int groundId;
-    std::string robotName;
-    bool model_is_loaded;
+    std::vector<std::string> monitoredModels;
+    std::vector<std::string> monitoredLinks;
+    std::vector<std::string> ignoredModels;
+    std::vector<std::string> ignoredLinks;
 
 
     gazebo_ros::Node::SharedPtr rosNode;
