@@ -1,14 +1,6 @@
 #include <sstream>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Timer.hh>
 #include <gazebo/physics/World.hh>
-#include <gazebo/physics/ContactManager.hh>
-#include <gazebo/physics/Collision.hh>
-#include <gazebo/physics/physics.hh>  
-#include <gazebo/sensors/ContactSensor.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/msgs/MessageTypes.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo_ros/node.hpp>
@@ -37,7 +29,7 @@ namespace gazebo
       this->getSDFParameters(_sdf);
 
       this->world = _parent;
-      this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactState>("collisions", 10);
+      this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactState>(this->rosPubTopic, 10);
 
       this->contactSub = this->gzNode->Subscribe("/gazebo/default/physics/contacts", &CollisionDetectorPlugin::OnContactMsg, this);
 
@@ -55,7 +47,7 @@ namespace gazebo
         if (filterContacts(collision1_name, collision2_name)) 
         {
           gazebo_msgs::msg::ContactState msg;
-          msg.info = "Collision between " + collision1_name + " and " + collision2_name;
+          // msg.info = "Collision between " + collision1_name + " and " + collision2_name;
           msg.collision1_name = contact.collision1();
           msg.collision2_name = contact.collision2();
 
@@ -99,6 +91,10 @@ namespace gazebo
         split(_sdf->Get<std::string>("ignored_models"), ' ', this->ignoredModels);
       if (_sdf->HasElement("ignored_links"))
         split(_sdf->Get<std::string>("ignored_links"), ' ', this->ignoredLinks);
+      if (_sdf->HasElement("ros_pub_topic"))
+        this->rosPubTopic = _sdf->Get<std::string>("ros_pub_topic");
+      else
+        this->rosPubTopic = "collisions";
     }
 
   void split(const std::string &s, const char delim, std::vector<std::string> &elems) {
@@ -129,6 +125,7 @@ namespace gazebo
     std::vector<std::string> monitoredLinks;
     std::vector<std::string> ignoredModels;
     std::vector<std::string> ignoredLinks;
+    std::string rosPubTopic;
 
 
     gazebo_ros::Node::SharedPtr rosNode;
