@@ -10,6 +10,8 @@
 #include <rclcpp/duration.hpp>
 
 #include <gazebo_msgs/msg/contact_state.hpp>
+#include <gazebo_msgs/msg/contacts_state.hpp>
+
 
 namespace gazebo
 {
@@ -29,15 +31,20 @@ namespace gazebo
       this->getSDFParameters(_sdf);
 
       this->world = _parent;
-      this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactState>(this->rosPubTopic, 10);
+      this->collisionPub = this->rosNode->create_publisher<gazebo_msgs::msg::ContactsState>(this->rosPubTopic, 10);
 
-      this->contactSub = this->gzNode->Subscribe("/gazebo/default/physics/contacts", &CollisionDetectorPlugin::OnContactMsg, this);
+      this->contactSub = this->gzNode->Subscribe(
+        "/gazebo/default/physics/contacts",
+         &CollisionDetectorPlugin::OnContactMsg,
+          this
+          );
 
     }
 
 
     void OnContactMsg(ConstContactsPtr& msg) 
     {
+      gazebo_msgs::msg::ContactsState contact_list_msg;
       for (int i = 0; i < msg->contact_size(); ++i)
       {
         const gazebo::msgs::Contact &contact = msg->contact(i);
@@ -46,10 +53,10 @@ namespace gazebo
 
         if (filterContacts(collision1_name, collision2_name)) 
         {
-          gazebo_msgs::msg::ContactState msg;
+          gazebo_msgs::msg::ContactState contact_msg;
           // msg.info = "Collision between " + collision1_name + " and " + collision2_name;
-          msg.collision1_name = contact.collision1();
-          msg.collision2_name = contact.collision2();
+          contact_msg.collision1_name = contact.collision1();
+          contact_msg.collision2_name = contact.collision2();
 
           for (auto contact_position : contact.position())
           {
@@ -57,11 +64,14 @@ namespace gazebo
             pos.x = contact_position.x();
             pos.y = contact_position.y();
             pos.z = contact_position.z();
-            msg.contact_positions.push_back(pos);
+            contact_msg.contact_positions.push_back(pos);
           }
-
-          this->collisionPub->publish(msg);
+          contact_list_msg.states.push_back(contact_msg);
         }
+      }
+      if (!contact_list_msg.states.empty())
+      {
+        this->collisionPub->publish(contact_list_msg);
       }
     }
 
@@ -129,7 +139,7 @@ namespace gazebo
 
 
     gazebo_ros::Node::SharedPtr rosNode;
-    rclcpp::Publisher<gazebo_msgs::msg::ContactState>::SharedPtr collisionPub;
+    rclcpp::Publisher<gazebo_msgs::msg::ContactsState>::SharedPtr collisionPub;
     rclcpp::TimerBase::SharedPtr timer;
   };
 
