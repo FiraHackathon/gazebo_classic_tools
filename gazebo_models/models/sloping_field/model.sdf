@@ -1,0 +1,240 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <model name="sloping_field">
+    <static>true</static>
+    <link name="ground">
+      <visual name="ground">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/ground.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/ground.material</uri>
+            <name>ground</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/ground.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.6</mu>
+              <mu2>0.6</mu2>
+              <slip1>0.00005</slip1>
+              <slip2>0.00005</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>0x01</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+            </bullet>
+          </contact>
+        </surface>
+        <laser_retro>0.0</laser_retro>
+      </collision>
+    </link>
+
+    <link name="bed1">
+      <visual name="bed1">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/bed1.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/bed1.material</uri>
+            <name>bed1</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/bed1.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>1.0</laser_retro>
+      </collision>
+    </link>
+
+    <link name="portulaca">
+      <visual name="portulaca">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/portulaca.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/portulaca.material</uri>
+            <name>portulaca</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/portulaca.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>-1.0</laser_retro>
+      </collision>
+    </link>
+
+    <link name="polygonum">
+      <visual name="polygonum">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/polygonum.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/polygonum.material</uri>
+            <name>polygonum</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/polygonum.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>-2.0</laser_retro>
+      </collision>
+    </link>
+
+    <link name="taraxacum">
+      <visual name="taraxacum">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/taraxacum.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/taraxacum.material</uri>
+            <name>taraxacum</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/taraxacum.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>-3.0</laser_retro>
+      </collision>
+    </link>
+
+    <link name="stones">
+      <visual name="stones">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/stones.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://sloping_field_assets/materials/stones.material</uri>
+            <name>stones</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/stones.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>-0.5</laser_retro>
+      </collision>
+    </link>
+
+    <link name="stem_collisions">
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sloping_field_assets/meshes/stem_collisions.obj</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+            <collide_bitmask>0x00</collide_bitmask>
+          </contact>
+        </surface>
+        <laser_retro>-5.0</laser_retro>
+      </collision>
+    </link>
+  </model>
+</sdf>
