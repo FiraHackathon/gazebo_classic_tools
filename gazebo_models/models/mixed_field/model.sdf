@@ -2,6 +2,8 @@
 <sdf version="1.7">
   <model name="mixed_field">
     <static>true</static>
+    <allow_auto_disable>true</allow_auto_disable>
+
     <link name="ground">
       <visual name="ground">
         <geometry>
@@ -23,7 +25,12 @@
           </mesh>
         </geometry>
         <surface>
-          <contact/>
+          <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x01</collide_bitmask>
+            <collide_without_contact>false</collide_without_contact>
+            <collide_without_contact_bitmask>0x01</collide_without_contact_bitmask>
+          </contact>
         </surface>
         <laser_retro>0.0</laser_retro>
       </collision>
@@ -81,8 +88,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x04</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x04</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>2.0</laser_retro>
@@ -110,8 +119,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x04</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x04</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>3.0</laser_retro>
@@ -140,8 +151,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x08</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x08</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-1.0</laser_retro>
@@ -170,8 +183,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x08</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x08</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-2.0</laser_retro>
@@ -200,8 +215,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x08</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x08</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-3.0</laser_retro>
@@ -230,8 +247,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x08</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x08</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-0.5</laser_retro>
@@ -259,8 +278,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x02</collide_bitmask>
             <collide_without_contact>false</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x02</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-4.0</laser_retro>
@@ -276,8 +297,10 @@
         </geometry>
         <surface>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x10</collide_bitmask>
             <collide_without_contact>true</collide_without_contact>
-            <collide_bitmask>0x00</collide_bitmask>
+            <collide_without_contact_bitmask>0x10</collide_without_contact_bitmask>
           </contact>
         </surface>
         <laser_retro>-5.0</laser_retro>

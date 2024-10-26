@@ -1,18 +1,10 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name='farm'>
+    <static>1</static>
+    <allow_auto_disable>1</allow_auto_disable>
+
     <link name='ground'>
-      <inertial>
-        <mass>1</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
       <pose frame=''>0 0 0 0 0 0</pose>
       <visual name='visual'>
         <pose frame=''>0 0 0 0 0 0</pose>
@@ -22,16 +14,6 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-<!--
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-          <shader type='pixel'/>
-        </material>
--->
         <transparency>0</transparency>
         <cast_shadows>0</cast_shadows>
       </visual>
@@ -69,9 +51,10 @@
             <threshold>1e+06</threshold>
           </bounce>
           <contact>
-            <collide_without_contact>0</collide_without_contact>
-            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
             <collide_bitmask>0x01</collide_bitmask>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>0x01</collide_without_contact_bitmask>
             <ode>
               <soft_cfm>0</soft_cfm>
               <soft_erp>0.2</soft_erp>
@@ -92,18 +75,8 @@
         </surface>
       </collision>
     </link>
+
     <link name='buildings'>
-      <inertial>
-        <mass>1</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
       <pose frame=''>0 0 0 0 0 0</pose>
       <visual name='visual'>
         <pose frame=''>0 0 0 0 0 0</pose>
@@ -113,16 +86,6 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-<!--
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-          <shader type='pixel'/>
-        </material>
--->
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -160,9 +123,10 @@
             <threshold>1e+06</threshold>
           </bounce>
           <contact>
+            <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
+            <collide_bitmask>0x02</collide_bitmask>
             <collide_without_contact>0</collide_without_contact>
-            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
-            <collide_bitmask>0x01</collide_bitmask>
+            <collide_without_contact_bitmask>0x02</collide_without_contact_bitmask>
             <ode>
               <soft_cfm>0</soft_cfm>
               <soft_erp>0.2</soft_erp>
@@ -183,6 +147,7 @@
         </surface>
       </collision>
     </link>
+
     <link name='leaves'>
       <inertial>
         <mass>1</mass>
@@ -217,7 +182,5 @@
         <cast_shadows>1</cast_shadows>
       </visual>
     </link>
-    <static>1</static>
-    <allow_auto_disable>1</allow_auto_disable>
   </model>
 </sdf>
