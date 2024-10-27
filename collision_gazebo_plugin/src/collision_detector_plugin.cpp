@@ -42,7 +42,7 @@ namespace gazebo
     }
 
 
-    void OnContactMsg(ConstContactsPtr& msg) 
+    void OnContactMsg(ConstContactsPtr& msg)
     {
       gazebo_msgs::msg::ContactsState contact_list_msg;
       for (int i = 0; i < msg->contact_size(); ++i)
@@ -51,7 +51,7 @@ namespace gazebo
         std::string collision1_name = contact.collision1();
         std::string collision2_name = contact.collision2();
 
-        if (filterContacts(collision1_name, collision2_name)) 
+        if (filterContacts(collision1_name, collision2_name))
         {
           gazebo_msgs::msg::ContactState contact_msg;
           // msg.info = "Collision between " + collision1_name + " and " + collision2_name;
@@ -76,16 +76,16 @@ namespace gazebo
     }
 
     bool filterContacts(const std::string collision1_name, const std::string collision2_name)
-    {  
+    {
       std::vector<std::string> model_link_coll1;
       std::vector<std::string> model_link_coll2;
 
-      split(collision1_name,':',model_link_coll1);
-      split(collision2_name,':',model_link_coll2);
+      split(collision1_name, ':', model_link_coll1);
+      split(collision2_name, ':', model_link_coll2);
 
       // At least one body is in the monitored models or links, and none is in the ignored models or links
       return ( (is_in(model_link_coll1[0], this->monitoredModels) || is_in(model_link_coll1[1], this->monitoredLinks)
-                 || is_in(model_link_coll2[0], this->monitoredModels) || is_in(model_link_coll2[1], this->monitoredLinks)) 
+                 || is_in(model_link_coll2[0], this->monitoredModels) || is_in(model_link_coll2[1], this->monitoredLinks))
              && (!is_in(model_link_coll1[0], this->ignoredModels) && !is_in(model_link_coll1[1], this->ignoredLinks)
                 && !is_in(model_link_coll2[0], this->ignoredModels) && !is_in(model_link_coll2[1], this->ignoredLinks)));
     }
@@ -130,7 +130,7 @@ namespace gazebo
     transport::NodePtr gzNode;
     transport::SubscriberPtr contactSub;
     event::ConnectionPtr updateConnection;
-    
+
     std::vector<std::string> monitoredModels;
     std::vector<std::string> monitoredLinks;
     std::vector<std::string> ignoredModels;

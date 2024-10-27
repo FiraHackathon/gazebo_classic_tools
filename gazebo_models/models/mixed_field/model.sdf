@@ -336,8 +336,18 @@
           <contact>
             <!-- bitmask: stems(4), weeds(3), crops(2), elements(1), ground(0) -->
             <collide_bitmask>0x10</collide_bitmask>
-            <collide_without_contact>true</collide_without_contact>
+            <collide_without_contact>false</collide_without_contact>
             <collide_without_contact_bitmask>0x10</collide_without_contact_bitmask>
+            <!-- Fake collide_without_contact by changing ode config. -->
+            <!-- This is required to detect collision with 'contacts' topic. -->
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0</soft_erp>
+              <kp>0</kp>
+              <kd>0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.0</min_depth>
+            </ode>
           </contact>
         </surface>
         <laser_retro>-5.0</laser_retro>
