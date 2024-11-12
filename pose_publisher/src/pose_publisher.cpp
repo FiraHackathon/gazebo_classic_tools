@@ -10,6 +10,7 @@
 #include <gazebo_ros/node.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <string>
 #include <utility>
@@ -28,17 +29,21 @@ class PosePublisherPlugin : public WorldPlugin
 public:
   virtual void Load(physics::WorldPtr world, sdf::ElementPtr sdf)
   {
-    std::string model_name;
+    world_ = world;
+    ros_node_ = gazebo_ros::Node::Get(sdf);
+
     std::string topic_name;
     double update_rate = 10;
 
-    ros_node_ = gazebo_ros::Node::Get(sdf);
-
     if (sdf->HasElement("model")) {
-      model_name = sdf->Get<std::string>("model");
+      model_name_ = sdf->Get<std::string>("model");
     } else {
       RCLCPP_ERROR(ros_node_->get_logger(), "Missing <model>, cannot proceed");
       return;
+    }
+
+    if (sdf->HasElement("link")) {
+      link_name_ = sdf->Get<std::string>("link");
     }
 
     if (sdf->HasElement("ros_pub_topic")) {
@@ -54,25 +59,11 @@ public:
       RCLCPP_INFO(ros_node_->get_logger(), "Missing <update_rate>, default to 10 Hz");
     }
 
-    auto model = world->ModelByName(model_name);
-    if (!model) {
-      RCLCPP_ERROR_STREAM(ros_node_->get_logger(), "Model '" << model_name << "' does not exist");
-      return;
-    }
-
-    // Use link as physic entity or model if link is not specified
-    if (sdf->HasElement("link")) {
-      auto link_name = sdf->Get<std::string>("link");
-      auto link = model->GetLink(link_name);
-      if (!link) {
-        RCLCPP_ERROR_STREAM(
-          ros_node_->get_logger(),
-          "Link '" << link_name << "' does not exist in model '" << model_name << "'");
-        return;
-      }
-      entity_ = link;
+    if (sdf->HasElement("world_frame")) {
+      frame_ = sdf->Get<std::string>("world_frame");
     } else {
-      entity_ = model;
+      frame_ = "map";
+      RCLCPP_INFO(ros_node_->get_logger(), "Missing <world_frame>, default to 'map'");
     }
 
     pose_pub_ = ros_node_->create_publisher<PoseMsg>(topic_name, 1);
@@ -87,9 +78,15 @@ public:
 
   void timer_callback_()
   {
+    if (!entity_ && !load_entity()) {
+      return;
+    }
+
     const auto & pose = entity_->WorldPose();
     const auto & quat = pose.Rot();
     PoseMsg msg;
+    msg.header.frame_id = frame_;
+    msg.header.stamp = ros_node_->now();
     msg.pose.position.x = pose.X();
     msg.pose.position.y = pose.Y();
     msg.pose.position.z = pose.Z();
@@ -100,7 +97,38 @@ public:
     pose_pub_->publish(std::move(msg));
   }
 
+  bool load_entity()
+  {
+    auto model = world_->ModelByName(model_name_);
+    if (!model) {
+      return false;
+    }
+
+    // Use link as physic entity or model if link is not specified
+    if (!link_name_.empty()) {
+      auto link = model->GetLink(link_name_);
+      if (!link) {
+        RCLCPP_WARN_STREAM(
+          ros_node_->get_logger(),
+          "Missing link '" << link_name_ << "' in model '" << model_name_ << "'");
+        return false;
+      }
+      entity_ = link;
+      RCLCPP_INFO_STREAM(
+        ros_node_->get_logger(), "Loaded entity: " << model_name_ << '.' << link_name_);
+    } else {
+      entity_ = model;
+      RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Loaded entity: " << model_name_);
+    }
+
+    return true;
+  }
+
 private:
+  std::string model_name_;
+  std::string link_name_;
+  std::string frame_;
+  physics::WorldPtr world_;
   physics::EntityPtr entity_;
   gazebo_ros::Node::SharedPtr ros_node_;
   PosePublisher pose_pub_;
